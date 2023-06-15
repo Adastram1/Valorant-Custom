@@ -7,6 +7,7 @@ This program is provided for informational purposes only, and its use to modify 
 
 
 NOTE :
+
 Windows defender currently blocks all downloads of the ValorantCustom Installer.exe program. To override this limitation, you can either :
 1) Temporarily deactivate Windows Defender, download the file, run the program, reactivate Windows Defender (Quick and easy, but not recommended).
 2) Download the program, go to Protection History in Windows Security, select the last item in the list, click on Actions then on Authorize/Restore and if the file is still not in the Download folder, re-download the program (More complicated and slow, but Recommended).
