@@ -10,7 +10,7 @@ Currently, windows defender blocks any download of the Core.exe file, which bloc
 
 TO INSTALL :
 1) Download the file ValorantCustom Installer.exe
-2 ) Run the ValorantCustom Installer.exe file (Windows Defender does not recognize the file and will block it by default; click on additional information, then on run anyway).
+2) Run the ValorantCustom Installer.exe file (Windows Defender does not recognize the file and will block it by default; click on additional information, then on run anyway).
 3) Follow the program instructions
 4) The link to launch Valorant with your personalized wallpaper is on your Desktop (Desktop/Valorant.lnk)
 5) You can remove the installer
