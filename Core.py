@@ -1,6 +1,5 @@
 from tkinter import filedialog
 import subprocess
-import requests
 import shutil
 import psutil
 import glob
@@ -11,54 +10,77 @@ import os
 
 
 Media = os.getcwd() + "\\Media\\"
-if os.path.exists(Media) != True:
-    os.mkdir(Media)
+RiotOriginal = Media + "Riot Original Video\\"
 
+#Rebuild directory in case they got deleted
+os.makedirs(RiotOriginal, exist_ok=True)
+
+#Check for readme file and restore it if deleted
+if os.path.exists(Media + "README.txt") != True:
     with open(Media + "README.txt") as f:
         f.write("To change the background video for valorant, put it in this folder, CAUTION, if multiple videos are in the folder, the first one will be used and if none are in the folder, the default one will be used.")
 
-
-
+#Read config file to get Riot Path and create a new one if not foud
+Build = False
 if os.path.exists("config.conf"):
     with open("config.conf", "r") as f:
         RiotPath = f.read()
+        if RiotPath == "":
+            Build = True
 else:
+    Build = True
+
+if Build:
+    #Build new config file
     if os.path.exists("C:\\Riot Games\\"):
         RiotPath = "C:\\Riot Games\\"
     else:
         RiotPath = filedialog.askdirectory(initialdir="/", title="Please select the Riot Games Folder")
         if RiotPath == "":
-            RiotPath = RiotPath + "\\"
             sys.exit(0)
 
+        #Reformat Path and write it in our config file
+        RiotPath = RiotPath.replace("/", "\\") + "\\"
         with open("config.conf", "w+") as f:
             f.write(RiotPath)
 
 
+Valorant = RiotPath + "VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\"
+
+
+def GetVideos(From: str):
+    """Returns the path list of all videos with .mp4 and .webm extensions"""
+    Videos = glob.glob(From + "*.mp4", include_hidden=False) + glob.glob(From + "*.webm", include_hidden=False)
+    return Videos
+    
+def MoveTo(From: str, To: str):
+    """Move all videos with .mp4 and .webm extensions from one folder to another and overwrite existing videos"""
+    Videos = GetVideos(From)
+    for Vid in Videos:
+        shutil.copy2(Vid, To + os.path.basename(Vid))
+
 
 #Restore old video to avoid riot launcher download
-OldVids = glob.glob(Media + "\\Riot Original Video\\*", include_hidden=False)
-for Vid in OldVids:
-    shutil.copy2(Vid, f"{RiotPath}VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{os.path.basename(Vid)}")
+MoveTo(RiotOriginal, Valorant)
 
-
-os.chdir(f"{RiotPath}Riot Client")
+#Start Valorant with defaults arguments
+os.chdir(f"{RiotPath}Riot Client\\")
 subprocess.Popen(RiotPath + "Riot Client\\RiotClientServices.exe --launch-product=valorant --launch-patchline=live")
 
 
+#Look for Valorant to start, and track riot launcher for updates wich would require us to replace riot's original videos
 Update = False
 Found = False
 while True:
     if Found:
         break
     else:
-        Actives = psutil.process_iter()
-        for Process in Actives:
-
-            if Process.name() == "RiotClientUx.exe":
+        for Process in psutil.process_iter():
+            Name = Process.name()
+            if Name == "RiotClientUx.exe":
                 Update = True
 
-            elif Process.name() == "VALORANT-Win64-Shipping.exe":
+            elif Name == "VALORANT-Win64-Shipping.exe":
                 Found = True
                 break
 
@@ -67,24 +89,20 @@ while True:
 
 #We're in the Loading Screen
 if Update:
-    OldVids = glob.glob(f"{Media}\\Riot Original Video\\*.mp4") + glob.glob(f"{Media}\\Riot Original Video\\*.webm")
-    for Vid in OldVids:
+    #Delete Old Videos that are no longer used 
+    for Vid in GetVideos(RiotOriginal):
         os.remove(Vid)
 
     #Get new downloaded video
-    NewVids = glob.glob(f"{RiotPath}VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\*.mp4") + glob.glob(f"{RiotPath}VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\*.webm")
-    for Vid in NewVids:
-        shutil.copy2(Vid, f"{Media}\\Riot Original Video\\{os.path.basename(Vid)}")
+    MoveTo(Valorant, RiotOriginal)
 
 
-Medias = glob.glob(Media + "*.mp4")
-Videos = glob.glob(f"{Media}\\Riot Original Video\\*.mp4") + glob.glob(f"{Media}\\Riot Original Video\\*webm")
-if len(Medias) == 0:
-    for Vid in Videos:
-        shutil.copy2(Vid, f"{RiotPath}VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{os.path.basename(Vid)}")
+#Get user's custom video and if none are found use riot's original videos
+UserVideos = GetVideos(Media)
+if UserVideos:
+    #Duplicate user's video with riot's videos name
+    for Vid in GetVideos(RiotOriginal):
+        shutil.copy2(UserVideos[0], Valorant + os.path.basename(Vid))
 else:
-    Video = Medias[0]
-    for Vid in Videos:
-        shutil.copy2(Video, f"{RiotPath}VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{os.path.basename(Vid)}")
-    
-
+    #Use riot's original videos
+    MoveTo(RiotOriginal, Valorant)
